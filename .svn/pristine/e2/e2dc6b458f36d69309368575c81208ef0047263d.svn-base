@@ -1,0 +1,34 @@
+ds18b20  golang版本的温度传感器 Demo
+led      golang+wiringPi版本的LED Demo
+led2      纯golang版本的LED Demo
+
+hug      golang版本数据监控Demo 源码  
+
+tools    编译好的工具
+         hug -->模拟下行控制对应的树莓派板子    
+         sug -->监控MQTT所有通信的上下行消息
+
+
+monitor  远程控制程序（自动上报温度和开关状态， 读取远程指令进行相关动作）
+
+monitor 自启动实现：
+cp -f monitor /home/pi/monitor/
+cp -f appserver.conf /home/pi/monitor/
+sudo cp -f monitor.service /lib/systemd/system/
+sudo chmod 755 /lib/systemd/system/monitor.service
+sudo systemctl enable monitor.service
+
+
+其他命令：
+#启动webtest服务
+systemctl start monitor.service
+#设置开机自启动
+systemctl enable monitor.service
+#停止开机自启动
+systemctl disable monitor.service
+#查看服务当前状态
+systemctl status monitor.service
+#重新启动服务
+systemctl restart monitor.service
+#查看所有已启动的服务
+systemctl list-units --type=service

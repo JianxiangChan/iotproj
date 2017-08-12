@@ -1,0 +1,15 @@
+;[mqtt]
+server = tcp://121.42.35.23:1883
+username = server
+password = server
+
+topic = application/00000000/node/%s/rx
+qos = 2
+count = 1
+clean = true
+interval = 10
+;[log]
+log_to_file = false
+log_dir_win = D:\log
+log_dir_linux = .
+log_prefix = hug

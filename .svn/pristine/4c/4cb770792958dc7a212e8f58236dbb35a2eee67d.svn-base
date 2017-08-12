@@ -1,0 +1,27 @@
+#include <wiringPi.h>
+#include <pcf8591.h>
+#include <stdio.h>
+
+#define ADDR 0X48
+#define BASE 64
+#define A0 BASE+0
+#define A1 BASE+1
+#define A2 BASE+2
+#define A3 BASE+3
+
+int main(void)
+{
+	int value;
+	int value2;
+	wiringPiSetup();
+	pcf8591Setup(BASE,ADDR);
+	while(1)
+	{
+		//这里面analogRead函数把操作I2C函数封装起来。
+		analogWrite(A1,value);
+		printf("AOUT: %d\n",value++);
+ 		value2 = analogRead(A0);
+		printf("Analoge: %dmv\n", value2*3300/255); 
+		delay(20);
+	}
+}

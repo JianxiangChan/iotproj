@@ -1,0 +1,62 @@
+package nclient
+
+import (
+	_ "fmt"
+	"hug/backend"
+
+	log "github.com/Sirupsen/logrus"
+	"github.com/robfig/cron"
+)
+
+const (
+	SPEC_MSG_INTEVAL string = "@every 30s"
+)
+
+type NClient struct {
+	mqtt  *backend.Backend
+	cron  *cron.Cron
+	topic string
+	mac   string
+	count int
+}
+
+func NewNClient(mqtt *backend.Backend, interval int) *NClient {
+	c := cron.New()
+	server := &NClient{
+		mqtt:  mqtt,
+		cron:  c,
+		topic: "node/b827ebd212b7/downlink",
+		mac:   "b827ebd212b7",
+		count: 0,
+	}
+	c.AddFunc(SPEC_MSG_INTEVAL, server.handlePublish)
+	return server
+}
+
+func (s *NClient) Start() {
+	s.cron.Start()
+	log.Info("NClient start")
+}
+
+func (s *NClient) Stop() {
+	s.cron.Stop()
+	log.Info("NClient stop")
+}
+
+func (s *NClient) handlePublish() {
+	var pkt LedPacket
+	pkt.Mac = s.mac
+	if s.count%2 == 0 {
+		pkt.LED = true
+	} else {
+		pkt.LED = false
+	}
+	s.count = s.count + 1
+	s.mqtt.Publish(s.topic, pkt)
+}
+
+//定义下行控制数据包
+type LedPacket struct {
+	Mac string `json:"mac"` //设备号，定义树莓派板唯一标识，使用MAC地址
+	LED bool   `json:"led"` //控制LED灯亮 = true ,LED灯灭=flase
+}

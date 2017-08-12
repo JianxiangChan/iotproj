@@ -1,0 +1,60 @@
+package config
+
+import (
+	"fmt"
+
+	log "github.com/Sirupsen/logrus"
+	"gopkg.in/ini.v1"
+)
+
+//
+//server = tcp://192.168.0.82:1883
+//username = intest
+//password = intest123
+//topic = application/%s/node/%s/rx
+//qos = 2
+//count = 200
+//clean = true
+//interval = 1000
+//
+type Config struct {
+	Server   string `ini:"server"`
+	Username string `ini:"username"`
+	Password string `ini:"password"`
+	Topic    string `ini:"topic"`
+	Qos      int    `ini:"qos"`
+	Count    int    `ini:"count"`
+	Clean    bool   `ini:"clean"`
+	Interval int    `ini:"interval"`
+	//LOG
+	LogToFile   bool   `ini:"log_to_file"`
+	LogDirWin   string `ini:"log_dir_win"`
+	LogDirLinux string `ini:"log_dir_linux"`
+	LogPrefix   string `ini:"log_prefix"`
+}
+
+func (c Config) String() string {
+	mqtt1 := fmt.Sprintf("MQTT:[%v]/[%v]/[%v]/[%v]", c.Server, c.Username, c.Password, c.Topic)
+	mqtt2 := fmt.Sprintf(":[%v]/[%v]/[%v]/[%v]", c.Qos, c.Count, c.Clean, c.Interval)
+
+	log := fmt.Sprintf("LOG:[ToFile:%v][win:%v]/[linux:%v]:[prefix:%v]", c.LogToFile, c.LogDirWin, c.LogDirLinux, c.LogPrefix)
+
+	return mqtt1 + mqtt2 + ", " + log
+}
+
+//Read Server's Config Value from "path"
+func ReadConfig(path string) (Config, error) {
+	var config Config
+	conf, err := ini.Load(path)
+	if err != nil {
+		log.Println("load config file fail!")
+		return config, err
+	}
+	conf.BlockMode = false
+	err = conf.MapTo(&config)
+	if err != nil {
+		log.Println("mapto config file fail!")
+		return config, err
+	}
+	return config, nil
+}

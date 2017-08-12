@@ -1,0 +1,158 @@
+#include <wiringPi.h>
+#include <wiringPiI2C.h>
+#include <stdio.h>
+#include <math.h>
+#include "bmp180.h"
+
+#define OSS BMP180_STD
+
+short ac1, ac2, ac3, b1, b2, mb, mc, md;
+unsigned short ac4, ac5, ac6;
+int fd;
+
+char i2c_readbyte(int reg)
+{
+	return (char)wiringPiI2CReadReg8(fd, reg);
+}
+
+void i2c_writebyte(int reg, int val)
+{
+	wiringPiI2CWriteReg8(fd, reg, val);
+}
+
+void* i2c_read_bit16(int reg)
+{
+	int msb, lsb;
+	msb = i2c_readbyte(reg);
+	lsb = i2c_readbyte(reg + 1);
+	void *value = (void *)((msb << 8) | lsb);
+	return value;
+}
+
+void load_calibration()
+{
+	ac1 = (short)(i2c_read_bit16(BMP180_CAL_AC1));
+	ac2 = (short)i2c_read_bit16(BMP180_CAL_AC2);
+	ac3 = (short)i2c_read_bit16(BMP180_CAL_AC3);
+	ac4 = (unsigned short)i2c_read_bit16(BMP180_CAL_AC4);
+	ac5 = (unsigned short)i2c_read_bit16(BMP180_CAL_AC5);
+	ac6 = (unsigned short)i2c_read_bit16(BMP180_CAL_AC6);
+	b1  = (short)i2c_read_bit16(BMP180_CAL_B1);
+	b2  = (short)i2c_read_bit16(BMP180_CAL_B2);
+	mb  = (short)i2c_read_bit16(BMP180_CAL_MB);
+	mc  = (short)i2c_read_bit16(BMP180_CAL_MC);
+	md  = (short)i2c_read_bit16(BMP180_CAL_MD);
+}
+
+int read_raw_temp()
+{
+	int raw;
+	i2c_writebyte(BMP180_CTR, BMP180_RTCMD);
+	delay(5);
+	raw = (int)((i2c_readbyte(BMP180_TDATA) << 8) \
+	+ (i2c_readbyte(BMP180_TDATA + 1)));
+	return raw;
+}
+
+int read_raw_pressure()
+{
+	int msb, lsb, xlsb, raw;
+	i2c_writebyte(BMP180_CTR, BMP180_RPCMD | (OSS << 6));
+	switch(OSS)
+	{
+		case BMP180_ULP:
+			delay(5);break;
+		case BMP180_HRES:
+			delay(14);break;
+		case BMP180_UHRES:
+			delay(26);break;
+		default:
+			delay(8);
+	}
+	msb = i2c_readbyte(BMP180_PDATA);
+	lsb = i2c_readbyte(BMP180_PDATA + 1);
+	xlsb = i2c_readbyte(BMP180_PDATA +2);
+	raw = ((msb << 16) | (lsb << 8) | xlsb) >> (8 - OSS);
+	return raw;
+}
+
+float read_temperature(void)
+{
+	float t;
+	int ut,x1,x2,b5;
+	ut = read_raw_temp();
+	x1 = ((ut - ac6)*ac5) >> 15;
+	x2 = (mc << 11) / (x1 + md);
+	b5 = x1 + x2;
+	t = ((b5 +8) >> 4) / 10.0;
+	return t;
+}
+
+int read_pressure()
+{
+	int p;
+	int ut,up,x1,x2,x3,b3,b5,b6;
+	unsigned int b4;
+	int b7;
+	ut = read_raw_temp();
+	up = read_raw_pressure();
+	
+	x1 = ((ut - ac6)*ac5) >> 15;
+ 	x2 = (mc << 11) / (x1 + md);
+	b5 = x1 + x2;
+	
+	//pressure calculations
+	b6 = b5 - 4000;
+	x1 = (b2 * (b6 * b6) >> 12) >> 11;
+	x2 = (ac2 * b6) >> 11;
+	x3 = x1 + x2;
+	b3 = (((ac1 * 4 + x3) << OSS) + 2) / 4;
+	x1 = (ac3 * b6) >> 13;
+	x2 = (b1 * ((b6 * b6) >> 12)) >> 16;
+	x3 = ((x1 + x2) + 2) >> 2;
+	b4 = (ac4 * (x3 + 32768)) >> 15;
+	b7 = (up - b3) * (50000 >> OSS);
+	if (b7 < 0x80000000){p = (b7 * 2) / b4;}
+	else {p = (b7 / b4) * 2;}
+    x1 = (p >> 8) * (p >> 8);
+    x1 = (x1 * 3038) >> 16;
+    x2 = (-7357 * p) >> 16;
+    p = p + ((x1 + x2 + 3791) >> 4);
+    return p;
+}
+
+float read_altitude()
+{
+	float pressure,altitude;
+	float sealevel_pa = 101325.0;
+	pressure = (float)read_pressure();
+	altitude = 44330.0 * (1.0 - pow(pressure / sealevel_pa,(1.0/5.255)));
+	return altitude;
+}
+
+float read_sealevel_pressure()
+{
+	float altitude_m = 0.0;
+	float pressure,p0;
+	pressure =(float)read_pressure();
+	p0 = pressure / pow(1.0 - altitude_m/44330.0,5.255);
+	return p0;
+}
+
+
+int main(int argc,char **argv)
+{
+	printf("BMP180 test program...\n");
+	if(wiringPiSetup() < 0) return 1;
+	fd = wiringPiI2CSetup(BMP180_ADDR);
+	load_calibration();
+	while(1)
+	{
+		printf("\nTemperature : %.2f C\n",read_temperature());
+		printf("Pressure :    %.2f Pa\n",read_pressure()/100.0);
+	 	printf("Altitude :    %.2f h\n",read_altitude());
+		delay(1000);
+	}
+	return 0;
+}
+

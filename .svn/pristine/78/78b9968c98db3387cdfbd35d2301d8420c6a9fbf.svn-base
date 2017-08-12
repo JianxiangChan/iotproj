@@ -1,0 +1,127 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "JiTaaqMJ0WfwRKycs3y6rDKZgAk=",
+			"path": "github.com/Sirupsen/logrus",
+			"revision": "3ec0642a7fb6488f65b06f9040adc67e3990296a",
+			"revisionTime": "2016-08-29T20:23:21Z"
+		},
+		{
+			"checksumSHA1": "9FTsJGp896aKeRzL8UKbMEHVRJ4=",
+			"path": "github.com/Unknwon/com",
+			"revision": "28b053d5a2923b87ce8c5a08f3af779894a72758",
+			"revisionTime": "2015-10-08T13:54:07Z"
+		},
+		{
+			"checksumSHA1": "+JA8qD8kRQ6v8dDlKCkAMYOq9Jg=",
+			"path": "github.com/codegangsta/cli",
+			"revision": "168c95418e66e019fe17b8f4f5c45aa62ff80e23",
+			"revisionTime": "2016-08-01T03:09:57Z"
+		},
+		{
+			"checksumSHA1": "1Hm7Ij3YHAqBbxLCcGr4NKbI6e0=",
+			"path": "github.com/codegangsta/inject",
+			"revision": "33e0aa1cb7c019ccc3fbe049a8262a6403d30504",
+			"revisionTime": "2015-01-14T23:56:00Z"
+		},
+		{
+			"checksumSHA1": "7bJJxX3dYxil97O4P59IZx/xTQQ=",
+			"path": "github.com/eclipse/paho.mqtt.golang",
+			"revision": "44eec149d4433449add74781ffc86cc60d3f1598",
+			"revisionTime": "2016-06-30T14:40:56Z"
+		},
+		{
+			"checksumSHA1": "c03puLfhf7toeIMmZBLkIaMqX5M=",
+			"path": "github.com/eclipse/paho.mqtt.golang/packets",
+			"revision": "44eec149d4433449add74781ffc86cc60d3f1598",
+			"revisionTime": "2016-06-30T14:40:56Z"
+		},
+		{
+			"checksumSHA1": "16YW7XYD4QwN5hf94NBhR70r858=",
+			"path": "github.com/go-macaron/inject",
+			"revision": "d8a0b8677191f4380287cfebd08e462217bac7ad",
+			"revisionTime": "2016-06-27T17:00:12Z"
+		},
+		{
+			"checksumSHA1": "AtI2wKvKTag/BASZPcdTd/KAjis=",
+			"path": "github.com/go-martini/martini",
+			"revision": "c257c412d547ac70fcaf5596c1a50a7cb832c1fc",
+			"revisionTime": "2016-06-18T11:20:59Z"
+		},
+		{
+			"checksumSHA1": "7VjWBbxIJUYXCoFzUp8p1E4jvUo=",
+			"path": "github.com/go-sql-driver/mysql",
+			"revision": "0b58b37b664c21f3010e836f1b931e1d0b0b0685",
+			"revisionTime": "2016-08-02T11:38:42Z"
+		},
+		{
+			"checksumSHA1": "K9z4s8s/b23iHFRU4ar334A0Oxc=",
+			"path": "github.com/go-xorm/core",
+			"revision": "5bf745d7d163f4380e6c2bba8c4afa60534dd087",
+			"revisionTime": "2016-08-05T15:24:16Z"
+		},
+		{
+			"checksumSHA1": "ppLBMyGMvSZy3vdQyc4U6zZPp00=",
+			"path": "github.com/go-xorm/xorm",
+			"revision": "c6c705684057842d9854e8299dd51abb06ae29f5",
+			"revisionTime": "2016-08-05T14:35:15Z"
+		},
+		{
+			"checksumSHA1": "vTUi72FPeKodpgaHf09p9TMEUPQ=",
+			"path": "github.com/julienschmidt/httprouter",
+			"revision": "d8ff598a019f2c7bad0980917a588193cf26666e",
+			"revisionTime": "2016-08-10T19:53:38Z"
+		},
+		{
+			"checksumSHA1": "lEzkjwyqZ1e8Zv/k1t8OW0e+YVQ=",
+			"path": "github.com/robfig/cron",
+			"revision": "9585fd555638e77bba25f25db5c44b41f264aeb7",
+			"revisionTime": "2016-09-27T16:42:31Z"
+		},
+		{
+			"checksumSHA1": "HUXE+Nrcau8FSaVEvPYHMvDjxOE=",
+			"path": "github.com/satori/go.uuid",
+			"revision": "b061729afc07e77a8aa4fad0a2fd840958f1942a",
+			"revisionTime": "2016-09-27T10:08:44Z"
+		},
+		{
+			"checksumSHA1": "ejWaWI/IIFwfHh6vTgV2z+C9x1o=",
+			"path": "github.com/urfave/negroni",
+			"revision": "5d815f907a182b6131cc88af3f17f898b93142a5",
+			"revisionTime": "2016-08-30T03:03:02Z"
+		},
+		{
+			"checksumSHA1": "likOl7O0BJntqagR050kkOBuY4o=",
+			"path": "golang.org/x/net/websocket",
+			"revision": "075e191f18186a8ff2becaf64478e30f4545cdad",
+			"revisionTime": "2016-08-05T06:12:51Z"
+		},
+		{
+			"checksumSHA1": "KqecwXo3OO+p4N+E9RhlHvl9I+w=",
+			"path": "golang.org/x/sys/unix",
+			"revision": "b699b7032584f0953262cb2788a0ca19bb494703",
+			"revisionTime": "2016-11-10T11:58:56Z"
+		},
+		{
+			"checksumSHA1": "Q24+t5ryUvt5JJPtPKim1q8hwmI=",
+			"path": "gopkg.in/gomail.v2",
+			"revision": "81ebce5c23dfd25c6c67194b37d3dd3f338c98b1",
+			"revisionTime": "2016-04-11T21:29:32Z"
+		},
+		{
+			"checksumSHA1": "DcPAKJLNwTx9nzMDLuIjhM7Tk2M=",
+			"path": "gopkg.in/ini.v1",
+			"revision": "6e4869b434bd001f6983749881c7ead3545887d8",
+			"revisionTime": "2016-08-27T06:11:18Z"
+		},
+		{
+			"checksumSHA1": "gopiu7lEGInrrCKBchpqr191mWU=",
+			"path": "gopkg.in/macaron.v1",
+			"revision": "4974334b10dbb6f5c0e17f4c10555ff050a16329",
+			"revisionTime": "2016-08-26T18:07:28Z"
+		}
+	],
+	"rootPath": "monitor"
+}

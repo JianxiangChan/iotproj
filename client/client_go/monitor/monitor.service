@@ -1,0 +1,12 @@
+[Unit]  
+Description=monitor  
+After=network.target  
+   
+[Service]    
+ExecStart=/usr/bin/nohup /home/pi/monitor/monitor -c /home/pi/monitor/appserver.conf
+ExecReload=killall -9 monitor & /usr/bin/nohup /home/pi/monitor/monitor -c /home/pi/monitor/appserver.conf &
+ExecStop=killall -9 monitor
+PrivateTmp=true  
+   
+[Install]  
+WantedBy=multi-user.target  

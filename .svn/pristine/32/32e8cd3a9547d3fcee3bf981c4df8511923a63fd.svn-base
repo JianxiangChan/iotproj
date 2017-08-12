@@ -1,0 +1,14 @@
+http://wiringpi.com/download-and-install/
+
+sudo apt-get install git-core
+git clone git://git.drogon.net/wiringPi
+
+$ git pull origin
+
+$ cd ~/wiringPi
+$ ./build
+
+$ gpio -v
+$ gpio readall
+
+sudo apt-get install build-essential

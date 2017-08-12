@@ -1,0 +1,550 @@
+	  ______                              _
+	 / _____)             _              | |    
+	( (____  _____ ____ _| |_ _____  ____| |__  
+	 \____ \| ___ |    (_   _) ___ |/ ___)  _ \ 
+	 _____) ) ____| | | || |_| ____( (___| | | |
+	(______/|_____)_|_|_| \__)_____)\____)_| |_|
+	  (C)2013 Semtech-Cycleo
+
+Basic communication protocol between Lora gateway and server
+
+Lora网关和服务器之间的基本通信协议
+=============================================================
+
+
+1. Introduction
+
+1. 简介
+----------------
+
+The protocol between the gateway and the server is purposefully very basic and 
+for demonstration purpose only, or for use on private and reliable networks.
+
+网关和服务器之间的协议被有意设计成很基本的，该协议仅用于演示目的，或用于私人和可靠网络。
+
+There is no authentication of the gateway or the server, and the acknowledges 
+are only used for network quality assessment, not to correct UDP datagrams 
+losses (no retries).
+
+网关和服务器都还未获得认证，并且该技术仅被用于网络质量评估，不是用以纠正UDP数据报丢失 （没有重试）
+
+
+2. System schematic and definitions
+
+2. 系统原理图和定义
+------------------------------------
+
+	 ((( Y )))
+	     |
+	     |
+	+ - -|- - - - - - - - - - - - - +        xxxxxxxxxxxx          +--------+
+	| +--+-----------+     +------+ |       xx x  x     xxx        |        |
+	| |              |     |      | |      xx  Internet  xx        |        |
+	| | Concentrator |<--->| Host |<-------xx     or    xx-------->|        |
+	| |              | SPI |      | |      xx  Intranet  xx        | Server |
+	| +--------------+     +------+ |       xxxx   x   xxxx        |        |
+	|    ^                     ^    |           xxxxxxxx           |        |
+	|    | PPS +-------+ NMEA  |    |                              |        |
+	|    +-----|  GPS  |-------+    |                              +--------+
+	|          | (opt) |            |
+	|          +-------+            |
+	|                               |
+	|             Gateway           |
+	+- - - - - - - - - - - - - - - -+
+
+__Concentrator__: radio RX/TX board, based on Semtech multichannel modems 
+(SX130x), transceivers (SX135x) and/or low-power stand-alone modems (SX127x). 
+
+_集中器_：无线电 RX/TX 板，基于Semtech多通道调制解调器（SX130x），收发器（SX135x）和/或 低功耗独立调制解调器（SX127x）
+
+__Host__: embedded computer on which the packet forwarder is run. Drives the 
+concentrator through a SPI link.
+
+_主机_：嵌入式计算机，在其上运行包转发器。通过SPI链路驱动集中器
+
+__GPS__: GNSS (GPS, Galileo, GLONASS, etc) receiver with a "1 Pulse Per Second"
+output and a serial link to the host to send NMEA frames containing time and
+geographical coordinates data. Optional.
+
+__GPS__: GNSS (GPS, Galileo, GLONASS, etc) 每秒接收一个脉冲输出和一个串行链接，发送包含时间和地理坐标数据的NMEA帧到主机上。可选
+
+__Gateway__: a device composed of at least one radio concentrator, a host, some 
+network connection to the internet or a private network (Ethernet, 3G, Wifi, 
+microwave link), and optionally a GPS receiver for synchronization.
+
+_网关_：由至少一个无线电集中器，一个主机，一些连接到互联网或者专用网络 (Ethernet, 3G, Wifi, microwave link)的组件，可选地用于同步的GPS接收器组成
+
+__Server__: an abstract computer that will process the RF packets received and 
+forwarded by the gateway, and issue RF packets in response that the gateway 
+will have to emit.
+
+_服务器_：一个抽象的计算机用于处理由网关接收和发送的 RF 包和网关将要发送的响应 RF 包的问题。
+
+It is assumed that the gateway can be behind a NAT or a firewall stopping any 
+incoming connection.
+It is assumed that the server has an static IP address (or an address solvable 
+through a DNS service) and is able to receive incoming connections on a 
+specific port.
+
+假定：网关可以在NAT或防火墙之后停止任何接入的链接。
+假定：服务器拥有静态地址（或通过DNS服务可解析的地址）并且能够接收特定端口的接入链接。
+
+3. Upstream protocol
+
+3. 上游协议
+---------------------
+
+### 3.1. Sequence diagram ###
+
+3.1 序列图
+
+	+---------+                                                    +---------+
+	| Gateway |                                                    | Server  |
+	+---------+                                                    +---------+
+	     | -----------------------------------\                         |
+	     |-| When 1-N RF packets are received |                         |
+	     | ------------------------------------                         |
+	     |                                                              |
+	     | PUSH_DATA (token X, GW MAC, JSON payload)                    |
+	     |------------------------------------------------------------->|
+	     |                                                              |
+	     |                                           PUSH_ACK (token X) |
+	     |<-------------------------------------------------------------|
+	     |                              ------------------------------\ |
+	     |                              | process packets *after* ack |-|
+	     |                              ------------------------------- |
+	     |                                                              |
+
+### 3.2. PUSH_DATA packet ###
+
+3.2 PUSH_DATA 包
+
+That packet type is used by the gateway mainly to forward the RF packets 
+received, and associated metadata, to the server.
+
+PUSH_DATA 包主要用于网关发送接收到的 RF 包，以及相关联的元数据到服务器
+
+ Bytes  | Function
+:------:|---------------------------------------------------------------------
+ 0      | protocol version = 2                                          协议版本 = 2
+ 1-2    | random token                                                  随机token
+ 3      | PUSH_DATA identifier 0x00                                     PUSH_DATA标识符 0x00
+ 4-11   | Gateway unique identifier (MAC address)                       网关唯一标识符（MAC 地址）
+ 12-end | JSON object, starting with {, ending with }, see section 4    JSON对象，以“{”开始并以“}”结束，请查看第四节
+
+
+
+### 3.3. PUSH_ACK packet ###
+
+3.3 PUSH_ACK 包
+
+That packet type is used by the server to acknowledge immediately all the 
+PUSH_DATA packets received.
+
+PUSH_DATA 包是服务器在收到PUSH_DATA 包后发往网关的确认包
+
+ Bytes  | Function
+:------:|---------------------------------------------------------------------
+ 0      | protocol version = 2                                      协议版本 = 2
+ 1-2    | same token as the PUSH_DATA packet to acknowledge         和PUSH_DATA 包一样的token用于确认
+ 3      | PUSH_ACK identifier 0x01                                  PUSH_ACK标识符 0x01
+
+
+4. Upstream JSON data structure
+
+4. 上游JSON 数据格式
+--------------------------------
+
+The root object can contain an array named "rxpk":
+
+该JSON对象包含Key为"rxpk"的数组
+
+``` json
+{
+	"rxpk":[ {...}, ...]
+}
+```
+
+That array contains at least one JSON object, each object contain a RF packet 
+and associated metadata with the following fields:
+
+rxpk 数组至少包含一个JSON对象，每个对象包含一个RF包以及相关联的元数据，如下所示
+
+ Name |  Type  | Function
+:----:|:------:|--------------------------------------------------------------
+ time | string | UTC time of pkt RX, us precision, ISO 8601 'compact' format         UTC时间，ISO 8601 "紧凑"格式
+ tmst | number | Internal timestamp of "RX finished" event (32b unsigned)            "RX完成"事件的内部时间戳（32bit 无符号）
+ freq | number | RX central frequency in MHz (unsigned float, Hz precision)          RX中心频率，单位为MHZ（float 无符号，精确到HZ）
+ chan | number | Concentrator "IF" channel used for RX (unsigned integer)            用于RX的集中器“IF”通道（integer 无符号）
+ rfch | number | Concentrator "RF chain" used for RX (unsigned integer)              用于RX的集中器“RF链”（integer 无符号）
+ stat | number | CRC status: 1 = OK, -1 = fail, 0 = no CRC                           CRC状态：1 = OK, -1 = fail, 0 = no CRC
+ modu | string | Modulation identifier "LORA" or "FSK"                               调制标识符"LORA" 或 "FSK" 
+ datr | string | LoRa datarate identifier (eg. SF12BW500)                            LoRa数据速率标识符 （如：SF12BW500）
+ datr | number | FSK datarate (unsigned, in bits per second)                         FSK数据速率（无符号，以位/秒为单位）
+ codr | string | LoRa ECC coding rate identifier                                     LoRa ECC编码率标识符
+ rssi | number | RSSI in dBm (signed integer, 1 dB precision)                        RSSI，单位dBm（有符号 integer，1 dB精度）
+ lsnr | number | Lora SNR ratio in dB (signed float, 0.1 dB precision)               Lora SNR比（dB）（有符号 float，0.1 dB精度）
+ size | number | RF packet payload size in bytes (unsigned integer)                  RF包有效负载大小，以字节为单位（无符号 integer）
+ data | string | Base64 encoded RF packet payload, padded                            Base64编码的RF数据包有效载荷，填充
+
+Example (white-spaces, indentation and newlines added for readability):
+
+案例（空格，缩进和换行符以增加可读性）
+
+``` json
+{"rxpk":[
+	{
+		"time":"2013-03-31T16:21:17.528002Z",
+		"tmst":3512348611,
+		"chan":2,
+		"rfch":0,
+		"freq":866.349812,
+		"stat":1,
+		"modu":"LORA",
+		"datr":"SF7BW125",
+		"codr":"4/6",
+		"rssi":-35,
+		"lsnr":5.1,
+		"size":32,
+		"data":"-DS4CGaDCdG+48eJNM3Vai-zDpsR71Pn9CPA9uCON84"
+	},{
+		"time":"2013-03-31T16:21:17.530974Z",
+		"tmst":3512348514,
+		"chan":9,
+		"rfch":1,
+		"freq":869.1,
+		"stat":1,
+		"modu":"FSK",
+		"datr":50000,
+		"rssi":-75,
+		"size":16,
+		"data":"VEVTVF9QQUNLRVRfMTIzNA=="
+	},{
+		"time":"2013-03-31T16:21:17.532038Z",
+		"tmst":3316387610,
+		"chan":0,
+		"rfch":0,
+		"freq":863.00981,
+		"stat":1,
+		"modu":"LORA",
+		"datr":"SF10BW125",
+		"codr":"4/7",
+		"rssi":-38,
+		"lsnr":5.5,
+		"size":32,
+		"data":"ysgRl452xNLep9S1NTIg2lomKDxUgn3DJ7DE+b00Ass"
+	}
+]}
+```
+
+The root object can also contain an object named "stat" :
+
+该JSON对象包含Key为"stat"的对象
+
+``` json
+{
+	"rxpk":[ {...}, ...],
+	"stat":{...}
+}
+```
+
+It is possible for a packet to contain no "rxpk" array but a "stat" object.
+
+该JSON对象有可能不包含"rxpk"数组但是一定包含"stat"对象
+
+``` json
+{
+	"stat":{...}
+}
+```
+
+That object contains the status of the gateway, with the following fields:
+
+"stat"对象里包含网关的状态，如下所示：
+
+ Name |  Type  | Function
+:----:|:------:|--------------------------------------------------------------
+ time | string | UTC 'system' time of the gateway, ISO 8601 'expanded' format    网关的UTC"系统"时间，ISO 8601 "紧凑"格式
+ lati | number | GPS latitude of the gateway in degree (float, N is +)           网关的GPS纬度（float，N 是 +）
+ long | number | GPS latitude of the gateway in degree (float, E is +)           网关的经度（float,E 是 +）
+ alti | number | GPS altitude of the gateway in meter RX (integer)               网关的GPS高度（integer）
+ rxnb | number | Number of radio packets received (unsigned integer)             接收的无线电数据包数（无符号 integer）
+ rxok | number | Number of radio packets received with a valid PHY CRC           使用有效PHY CRC接收的无线电数据包数
+ rxfw | number | Number of radio packets forwarded (unsigned integer)            转发至服务器的无线电数据包数（无符号 integer）
+ ackr | number | Percentage of upstream datagrams that were acknowledged         已确认的上游数据报的百分比
+ dwnb | number | Number of downlink datagrams received (unsigned integer)        接收的下行链路数据报数（无符号 integer）
+ txnb | number | Number of packets emitted (unsigned integer)                    发射至节点的包数（无符号 integer）
+
+Example (white-spaces, indentation and newlines added for readability):
+
+案例（空格，缩进和换行符以增加可读性）：
+
+``` json
+{"stat":{
+	"time":"2014-01-12 08:59:28 GMT",
+	"lati":46.24000,
+	"long":3.25230,
+	"alti":145,
+	"rxnb":2,
+	"rxok":2,
+	"rxfw":2,
+	"ackr":100.0,
+	"dwnb":2,
+	"txnb":2
+}}
+```
+
+
+5. Downstream protocol
+
+5. 下游协议
+-----------------------
+
+### 5.1. Sequence diagram ###
+
+5.1 序列图
+
+	+---------+                                                    +---------+
+	| Gateway |                                                    | Server  |
+	+---------+                                                    +---------+
+	     | -----------------------------------\                         |
+	     |-| Every N seconds (keepalive time) |                         |
+	     | ------------------------------------                         |
+	     |                                                              |
+	     | PULL_DATA (token Y, MAC@)                                    |
+	     |------------------------------------------------------------->|
+	     |                                                              |
+	     |                                           PULL_ACK (token Y) |
+	     |<-------------------------------------------------------------|
+	     |                                                              |
+
+	+---------+                                                    +---------+
+	| Gateway |                                                    | Server  |
+	+---------+                                                    +---------+
+	     |      ------------------------------------------------------\ |
+	     |      | Anytime after first PULL_DATA for each packet to TX |-|
+	     |      ------------------------------------------------------- |
+	     |                                                              |
+	     |                            PULL_RESP (token Z, JSON payload) |
+	     |<-------------------------------------------------------------|
+	     |                                                              |
+	     | TX_ACK (token Z, JSON payload)                               |
+	     |------------------------------------------------------------->|
+
+### 5.2. PULL_DATA packet ###
+
+5.2 PULL_DATA 包
+
+That packet type is used by the gateway to poll data from the server.
+
+网关使用该类型的数据包轮询服务器的数据
+
+This data exchange is initialized by the gateway because it might be 
+impossible for the server to send packets to the gateway if the gateway is 
+behind a NAT.
+
+此数据交换由网关初始化，因为如果网关在NAT之后，服务器可能不能向网关发送数据包
+
+
+When the gateway initialize the exchange, the network route towards the 
+server will open and will allow for packets to flow both directions.
+The gateway must periodically send PULL_DATA packets to be sure the network 
+route stays open for the server to be used at any time.
+
+当网关初始化交换时，网关通往服务器的网络路由将会打开并且允许数据包双向流动。
+网关必须定期发送PULL_DATA数据包，以确保网络路由保持打开，服务器随时可以使用。
+
+ Bytes  | Function
+:------:|---------------------------------------------------------------------
+ 0      | protocol version = 2                        协议版本 = 2    
+ 1-2    | random token                                随机 token
+ 3      | PULL_DATA identifier 0x02                   PULL_DATA标识符 0x02
+ 4-11   | Gateway unique identifier (MAC address)     网关唯一标识符（MAC 地址）
+
+### 5.3. PULL_ACK packet ###
+
+That packet type is used by the server to confirm that the network route is 
+open and that the server can send PULL_RESP packets at any time.
+
+服务器使用PULL_ACK数据包来确定通往网关的网络路由已开启并且服务器可以随时发送PULL_RESP数据包至网关。
+
+ Bytes  | Function
+:------:|---------------------------------------------------------------------
+ 0      | protocol version = 2                                 协议版本 = 2   
+ 1-2    | same token as the PULL_DATA packet to acknowledge    使用和PULL_DATA一样的tolen来确认
+ 3      | PULL_ACK identifier 0x04                             PULL_ACK 标识符 0x04
+
+### 5.4. PULL_RESP packet ###
+
+That packet type is used by the server to send RF packets and associated 
+metadata that will have to be emitted by the gateway.
+
+服务器使用PULL_RESP数据包发送必须由网关发出的RF数据包和相关联元数据。
+
+
+ Bytes  | Function
+:------:|---------------------------------------------------------------------
+ 0      | protocol version = 2           
+ 1-2    | random token
+ 3      | PULL_RESP identifier 0x03
+ 4-end  | JSON object, starting with {, ending with }, see section 6
+
+### 5.5. TX_ACK packet ###
+
+That packet type is used by the gateway to send a feedback to the server
+to inform if a downlink request has been accepted or rejected by the gateway.
+The datagram may optionnaly contain a JSON string to give more details on
+acknoledge. If no JSON is present (empty string), this means than no error
+occured.
+
+网关发送TX_ACK数据包至服务器告知服务器下行请求已经被网关接收或拒绝。
+数据报可以可选地包含JSON字符串以给出关于确认的更多细节，如果当下不包含JSON （空字符串），表明没有错误发生。
+
+ Bytes  | Function
+:------:|---------------------------------------------------------------------
+ 0      | protocol version = 2
+ 1-2    | same token as the PULL_RESP packet to acknowledge
+ 3      | TX_ACK identifier 0x05
+ 4-11   | Gateway unique identifier (MAC address)
+ 12-end | [optional] JSON object, starting with {, ending with }, see section 6
+
+6. Downstream JSON data structure
+
+6. 下游JSON数据结构
+----------------------------------
+
+The root object of PULL_RESP packet must contain an object named "txpk":
+
+``` json
+{
+	"txpk": {...}
+}
+```
+
+That object contain a RF packet to be emitted and associated metadata with the following fields: 
+
+该对象包含要发送的RF数据包和与以下字段相关联的元数据：
+
+ Name |  Type  | Function
+:----:|:------:|--------------------------------------------------------------
+ imme | bool   | Send packet immediately (will ignore tmst & time)              立即发送数据包（忽视时间戳和时间两个参数）
+ tmst | number | Send packet on a certain timestamp value (will ignore time)    在某个时间戳值上发送数据包（忽视时间参数）
+ time | string | Send packet at a certain time (GPS synchronization required)   在某个时间发送数据包（需要GPS同步）
+ freq | number | TX central frequency in MHz (unsigned float, Hz precision)     TX中心频率单位为MHz（无符号 float，精确到Hz）
+ rfch | number | Concentrator "RF chain" used for TX (unsigned integer)         用于TX的集中器“RF链”（无符号 integer）
+ powe | number | TX output power in dBm (unsigned integer, dBm precision)       TX输出功率，单位dBm（无符号 integer，精确到dBm）
+ modu | string | Modulation identifier "LORA" or "FSK"                          调制标识符 LoRa 或 FSK
+ datr | string | LoRa datarate identifier (eg. SF12BW500)                       LoRa数据速率标识符（例如：SF12BW500）
+ datr | number | FSK datarate (unsigned, in bits per second)                    FSK数据速率（无符号，以位/秒为单位）
+ codr | string | LoRa ECC coding rate identifier                                LoRa ECC编码率标识符
+ fdev | number | FSK frequency deviation (unsigned integer, in Hz)              FSK频偏（无符号 integer，单位为Hz）
+ ipol | bool   | Lora modulation polarization inversion                         Lora调制极化反转
+ prea | number | RF preamble size (unsigned integer)                            RF前导码大小（无符号 integer）
+ size | number | RF packet payload size in bytes (unsigned integer)             RF包有效负载大小（以字节为单位）
+ data | string | Base64 encoded RF packet payload, padding optional             Base64编码的RF数据包有效载荷，填充可选
+ ncrc | bool   | If true, disable the CRC of the physical layer (optional)      如果为true，请禁用物理层的CRC（可选）
+
+Most fields are optional.
+If a field is omitted, default parameters will be used.
+
+大部分的字段都是可选的。
+如果省略，则将使用默认参数。
+
+Examples (white-spaces, indentation and newlines added for readability):
+
+``` json
+{"txpk":{
+	"imme":true,
+	"freq":864.123456,
+	"rfch":0,
+	"powe":14,
+	"modu":"LORA",
+	"datr":"SF11BW125",
+	"codr":"4/6",
+	"ipol":false,
+	"size":32,
+	"data":"H3P3N2i9qc4yt7rK7ldqoeCVJGBybzPY5h1Dd7P7p8v"
+}}
+```
+
+``` json
+{"txpk":{
+	"imme":true,
+	"freq":861.3,
+	"rfch":0,
+	"powe":12,
+	"modu":"FSK",
+	"datr":50000,
+	"fdev":3000,
+	"size":32,
+	"data":"H3P3N2i9qc4yt7rK7ldqoeCVJGBybzPY5h1Dd7P7p8v"
+}}
+```
+
+The root object of TX_ACK packet must contain an object named "txpk_ack":
+TX_ACK数据包必须包含 "txpk_ack" 对象
+
+``` json
+{
+	"txpk_ack": {...}
+}
+```
+
+That object contain status information concerning the associated PULL_RESP packet.
+
+该对象包含有关相关的 PULL_RESP 数据包的状态信息
+
+ Name |  Type  | Function
+:----:|:------:|------------------------------------------------------------------------------
+error | string | Indication about success or type of failure that occured for downlink request. 指示下行请求成功或失败
+
+The possible values of "error" field are:
+
+"error" 字段的值可能为以下字段：
+
+ Value             | Definition
+:-----------------:|---------------------------------------------------------------------
+ NONE              | Packet has been programmed for downlink                                        数据包已经被用于下行链路编程
+ TOO_LATE          | Rejected because it was already too late to program this packet for downlink   因为太迟被拒绝用于下行链路编程
+ TOO_EARLY         | Rejected because downlink packet timestamp is too much in advance              被拒绝因为下行包的时间戳提前太多了
+ COLLISION_PACKET  | Rejected because there was already a packet programmed in requested timeframe  被拒绝，因为在请求的时间范围内存在一个编程数据包
+ COLLISION_BEACON  | Rejected because there was already a beacon planned in requested timeframe     被拒绝，因为已经在规定的时间内计划了一个信标
+ TX_FREQ           | Rejected because requested frequency is not supported by TX RF chain           被拒绝，因为TX RF链不支持请求的频率
+ TX_POWER          | Rejected because requested power is not supported by gateway                   由于网关不支持请求的发射功率而被拒绝
+ GPS_UNLOCKED      | Rejected because GPS is unlocked, so GPS timestamp cannot be used              被拒绝，GPS已解锁，因此无法使用GPS时间戳
+
+Examples (white-spaces, indentation and newlines added for readability):
+
+
+``` json
+{"txpk_ack":{
+	"error":"COLLISION_PACKET"
+}}
+```
+
+7. Revisions
+-------------
+
+### v1.3 ###
+
+* Added downlink feedback from gateway to server (PULL_RESP -> TX_ACK)
+
+增加了从网关到服务器的下行链路反馈 
+
+### v1.2 ###
+
+* Added value of FSK bitrate for upstream.
+* Added parameters for FSK bitrate and frequency deviation for downstream
+
+添加了上行FSK比特率的值
+为下游增加了FSK位速率和频率偏差的参数
+
+### v1.1 ###
+
+* Added syntax for status report JSON object on upstream.
+
+在上游添加了报告JSON对象状态的语法
+
+### v1.0 ###
+
+* Initial version.

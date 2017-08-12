@@ -1,0 +1,23 @@
+#include <wiringPi.h>
+
+#define LED  (25)
+
+void led_flash_delay(void);
+
+int main (void)
+{
+	if(wiringPiSetup() < 0) return 1;
+	pinMode(LED, OUTPUT);
+	while(1)
+	{
+		led_flash_delay();
+	}
+}
+
+void led_flash_delay(void)
+{
+	digitalWrite(LED, 1);
+	delay(200);
+	digitalWrite(LED, 0);
+	delay(200);
+}

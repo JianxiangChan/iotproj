@@ -1,0 +1,27 @@
+#!/bin/bash
+
+echo "start svn update"
+svn update
+echo "start svn update ok"
+
+sleep 1
+
+echo "start compiler"
+go build
+echo "start compiler ok"
+
+sleep 1
+
+echo "kill & cp & run"
+
+#killall -9 monitor
+
+tar czvf monitor0.0.1-`date +%Y%m%d%H%M%S`.tar.gz  monitor  appserver.conf
+
+sleep 1
+cp -f monitor /home/pi/monitor/
+cp -f appserver.conf /home/pi/monitor/
+
+cd /home/pi/monitor/
+#nohup /home/pi/monitor/monitor  >monitor.log 2>&1 &
+echo "kill & cp & run ok"

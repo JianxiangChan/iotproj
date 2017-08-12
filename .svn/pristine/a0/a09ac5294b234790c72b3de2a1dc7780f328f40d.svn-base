@@ -1,0 +1,48 @@
+#include <wiringPi.h>
+#include <wiringPiI2C.h>
+#include <stdio.h>
+
+#define DS3231_ADDR 0x68
+
+char buf[] = {0x00, 0x08, 0x21, 0x02, 0x06, 0x06, 0x17};
+char *str[] = {"Sun", "Mon", "Tues", "Wed", "Thur", "Fir", "Sat"};
+int fd;
+
+void ds3231_time_set(void)
+{
+	size_t i = 0;
+	for(i =0; i < 7; i++)
+	{
+		wiringPiI2CWriteReg8(fd, i, buf[i]);
+	}
+}
+
+void ds3231_time_read(void)
+{
+	size_t i = 0;
+	for(i = 0; i < 7; i++)
+	{
+		buf[i] = (char)wiringPiI2CReadReg8(fd,i);
+	}
+}
+
+int main(int argc,char **argv)
+{
+	if(wiringPiSetup() < 0) return 1;
+	fd = wiringPiI2CSetup(DS3231_ADDR);
+	printf("DS3231 test program ...\n\n");
+	
+	ds3231_time_set();
+	while(1)
+	{
+		ds3231_time_read();
+		//year/month/day
+		printf("20%02x/%02x/%02x  ",buf[6],buf[5],buf[4]);
+		//hour:minute/second
+		printf("%02x:%02x:%02x  ",buf[2],buf[1],buf[0]);
+		//weekday
+		printf("%s\n",str[(unsigned char)buf[3]]);
+		delay(1000); 
+	}
+	return 0;
+}

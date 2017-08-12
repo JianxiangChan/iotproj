@@ -1,0 +1,81 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h> //unix std 是POSIX标准定义的unix类系统定义符号常量的头文件
+					//包含了许多UNIX系统服务函数的原型，列如read write getpid函数
+#include <fcntl.h>	//定义了很多宏和open fcntl原型
+
+#include <dirent.h>	 //POSIX标准定义的unix类目录操作的头文件 包含了许多unix系统服务
+					//原型，列如opendir readdir等等
+#include <string.h>
+#include <time.h>	//一些计时及时间相隔函数
+
+int main(int argc, char *argv[])
+{
+	char path[50] = "/sys/bus/w1/devices";
+	char rom[50];
+	char buf[100];
+	DIR *dirp;
+	struct dirent *direntp;
+	int fd = -1;
+	char *temp;
+	float value;
+	int i = 0;
+	//可以执行函数参数中的命令
+	// #include <stdlib.h>  
+	// int system(const char* cmdstring); 
+	//加载模块
+	system("sudo modprobe w1-gpio");
+	system("sudo modprobe w1-therm");
+	//打开路径
+	if((dirp = opendir(path)) == NULL)
+	{
+		printf("open dir error\n");
+		return 1;
+	}
+	
+	//读取文件
+	while((direntp = readdir(dirp)) != NULL)
+	{
+		if(strstr(direntp->d_name, "28-"))
+		{
+			strcpy(rom, direntp->d_name);
+			printf(" rom: %s\n", rom);
+		}
+	}
+	closedir(dirp);
+	
+	//进入下级目录
+	strcat(path, "/");
+	strcat(path, rom);
+	strcat(path, "/w1_slave");
+	printf("%s\n",path);
+	while(1)
+	{
+		
+		//以只读的方式打开文件
+		if((fd = open(path, O_RDONLY)) < 0)
+		{
+			printf("open error");
+			return 1;
+		}	
+		
+		if(read(fd, buf, sizeof(buf)) < 0)
+		{
+			printf("read error\n");
+			return 1;
+		}
+		
+		//找到t第一次出现的位置
+		temp = strchr(buf, 't');
+		//读取格式化的字符串数据
+		sscanf(temp, "t=%s", temp);
+		//字符串转换成浮点数
+		value = atof(temp)/1000;
+		printf(" temp: %3.3f °C\n", value);
+		
+		sleep(1);
+		
+	}
+	return 0;
+}
+

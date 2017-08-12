@@ -1,0 +1,78 @@
+package main
+
+import (
+	"fmt"
+	"hug/applog"
+	"hug/backend"
+	"hug/config"
+	"hug/nclient"
+	"runtime"
+	_ "time"
+
+	"os"
+	"os/signal"
+	"syscall"
+
+	log "github.com/Sirupsen/logrus"
+	"github.com/codegangsta/cli"
+)
+
+func run(c *cli.Context) error {
+	conf, err := config.ReadConfig(c.String("conf"))
+	if err != nil {
+		log.Error("read from conf fail!", c.String("conf"))
+		return err
+	}
+	fmt.Println("conf =  ", conf)
+
+	fmt.Println("runtime.GOOS = ", runtime.GOOS)
+
+	if conf.LogToFile {
+		var logger *applog.AutoDailyLoger
+		if runtime.GOOS == "windows" {
+			logger = applog.NewAutoDailyLoger(conf.LogDirWin, conf.LogPrefix)
+		} else {
+			logger = applog.NewAutoDailyLoger(conf.LogDirLinux, conf.LogPrefix)
+		}
+		logger.Start()
+		defer logger.Stop()
+	}
+
+	go mqttclient(conf)
+
+	//quit when receive end signal
+	sigChan := make(chan os.Signal)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	log.Infof("signal received signal %v", <-sigChan)
+	log.Warn("shutting down server")
+	return nil
+}
+
+func main() {
+	app := cli.NewApp()
+	app.Name = "hug"
+	app.Usage = "hug"
+	app.Copyright = "hug@gmail.com"
+	app.Version = "0.0.1"
+	app.Action = run
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:   "conf,c",
+			Usage:  "Set conf path here",
+			Value:  "appserver.conf",
+			EnvVar: "APP_CONF",
+		},
+	}
+	app.Run(os.Args)
+}
+
+func mqttclient(conf config.Config) {
+	mqclient, err := backend.NewBackend(conf.Server, conf.Username, conf.Password)
+	fmt.Printf("mqclient = [%v]\n", mqclient)
+	fmt.Printf("err = [%v]\n", err)
+	if mqclient == nil {
+		return
+	}
+	ncli := nclient.NewNClient(mqclient, conf.Interval)
+	ncli.Start()
+}

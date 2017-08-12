@@ -1,0 +1,4 @@
+uart:uart
+	gcc -Wall uart.c -o uart -lwiringPi 
+clean:
+	rm uart

@@ -1,0 +1,47 @@
+cat /lib/systemd/system/lorabridge.service
+cat /lib/systemd/system/lrgateway.service
+
+
+start gateway
+
+ExecStartPre=/home/pi/lora/packet_forwarder/reset_pkt_fwd.sh start /home/pi/lora/packet_forwarder/gps_pkt_fwd/local_conf.json
+ExecStart=/home/pi/lora/packet_forwarder/gps_pkt_fwd/gps_pkt_fwd
+
+
+
+start bridge
+
+ExecStartPre=/home/pi/lora/packet_forwarder/reset_pkt_fwd.sh start /home/pi/lora/packet_forwarder/gps_pkt_fwd/local_conf.json
+ExecStart=/home/pi/lora/packet_forwarder/gps_pkt_fwd/gps_pkt_fwd
+
+
+./reset_pkt_fwd.sh start
+
+
+install golang on arm
+wget http://www.golangtc.com/static/go/1.8/go1.8.linux-armv6l.tar.gz
+tar zxvf go1.8.linux-armv6l.tar.gz
+
+设置环境变量
+sudo vi /etc/profile
+
+export PATH=$PATH:/home/pi/go/bin
+export GOROOT=/home/pi/go
+export GOPATH=/home/pi/gopro
+
+sudo source /etc/profile
+
+go verion
+
+panyy = P#i9@H$3
+
+mkdir -p gopro/github.com/brocaar
+svn co svn://121.40.77.15/project/server/lora-gateway-bridge
+
+
+
+
+
+
+
+

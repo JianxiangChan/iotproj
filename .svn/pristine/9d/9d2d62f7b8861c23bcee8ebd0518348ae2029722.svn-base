@@ -1,0 +1,66 @@
+#include <wiringPi.h>
+#include <wiringPiI2C.h>
+#include <stdio.h>
+
+#define PCF8574_ADD (0x20)
+#define BEEP_ON  ((~(1<<7)) & i2c_readByte())
+#define BEEP_OFF ((1<<7) | i2c_readByte())
+#define LED_OFF  ((1<<4) | i2c_readByte())
+#define LED_ON   ((~(1<<4)) & i2c_readByte())
+
+int fd;
+char i2c_readByte()
+{
+	return (char)wiringPiI2CRead(fd);
+}
+
+void i2c_writeByte(char byte)
+{
+	wiringPiI2CWrite(fd,byte);
+}
+
+
+int main()
+{
+	char value;
+	
+	if(wiringPiSetup() < 0) return 1;
+	fd = wiringPiI2CSetup(PCF8574_ADD);
+	//printf("fd = %d",fd);
+	printf("pcf8574 test program.\n");
+	
+	while(1)
+	{
+		i2c_writeByte(0x0f | i2c_readByte());
+		value = i2c_readByte() | 0xf0;
+		if(value != 0xff)
+		{
+			i2c_writeByte(BEEP_ON);
+			i2c_writeByte(LED_ON);
+			switch(value)
+			{
+				case 0xfe:
+					printf("left\n");break;
+				case 0xfd:
+					printf("up\n");break;
+				case 0xfb:
+					printf("down\n");break;			
+				case 0xf7:
+					printf("right\n");break;			
+				default:
+					printf("unknow\n");
+			}
+			//按键按下 常亮
+			while(value != 0xff)
+			{
+				i2c_writeByte(0x0f | i2c_readByte());
+				value = i2c_readByte() | 0xf0;
+				delay(10);
+			}
+			i2c_writeByte(BEEP_OFF);
+			i2c_writeByte(LED_OFF);
+		}
+		delay(10);
+	}
+	
+}

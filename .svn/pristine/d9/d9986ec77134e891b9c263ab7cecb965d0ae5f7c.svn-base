@@ -1,0 +1,5 @@
+key:key.c
+	gcc -Wall key.c -o key -lwiringPi
+	gcc -Wall interrupt.c -o interrupt -lwiringPi
+clean:
+	rm key interrupt

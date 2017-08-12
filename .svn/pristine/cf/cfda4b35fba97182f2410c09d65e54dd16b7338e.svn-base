@@ -1,0 +1,10 @@
+
+
+crontab -e
+删除原来的定时任务
+/bin/systemctl restart crond.service  #启动服务
+
+/bin/systemctl reload  crond.service  #重新载入配置
+
+/bin/systemctl status  crond.service  #查看crontab服务状态
+

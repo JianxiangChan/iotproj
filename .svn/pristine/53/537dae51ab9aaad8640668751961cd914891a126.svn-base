@@ -1,0 +1,35 @@
+;[mqtt]
+mqtt_server = tcp://121.42.35.23:1883
+mqtt_username = monitor
+mqtt_password = monitor
+mqtt_subtopic = node/+/uplink
+mqtt_pubtopic = node/%s/downlink
+
+;[log]
+log_dir_win = D:\log
+log_dir_linux = /root/monitorweb
+log_prefix = monitorweb
+log_tofile = true
+
+;[mysql]
+mysql = root:Lora123*@tcp(121.42.35.23:3306)/monitor?charset=utf8
+
+;[http]
+http_server_win = 0.0.0.0:2017
+http_server_linux = 127.0.0.1:2017
+
+;[mqttweb]
+mqttweb_topic = node/+/uplink
+mqttweb_hostname = 121.42.35.23
+mqttweb_port = 8083
+mqttweb_path = 
+mqttweb_user = monitor
+mqttweb_pass = monitor
+mqttweb_keepalive = 60	
+mqttweb_timeout = 3
+mqttweb_ssl = false
+mqttweb_cleanSession = true
+mqttweb_lastWillTopic = 
+mqttweb_lastWillQos = 2
+mqttweb_lastWillRetain = false
+mqttweb_lastWillMessage = 

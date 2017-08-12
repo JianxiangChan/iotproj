@@ -1,0 +1,53 @@
+2.led
+没啥新的东西 就是GPIO操作
+3.key
+可以设置中断方式的来实现GPIO操作 
+wiringPiISR(gpio_num, rise/fall_edge, isr_server_addr)
+4. gpio load i2c时候出现问题
+gpio: Unable to load/unload modules as this Pi has the device tree enabled.
+You need to run the raspi-config program (as root) and select the
+modules (SPI or I2C) that you wish to load/unload there and reboot.
+There is more information here:
+https://www.raspberrypi.org/forums/viewtopic.php?f=28&t=97314
+解决步骤：  1. lsmod 查看i2c i2s spi都没有在里面，网上说在/edc/modprobe.d的黑名单里面取消注释，依次打开所有黑名单，发现没有对应的
+			2. 打开/boot/config.txt 里面的发现这三个模块都被注释掉了，于是取消注释， reboot重启 lsmod就发现内核已经装载着三个模块了。
+spi_bcm2835             6678  0 
+bcm2835_gpiomem         2976  0 
+i2c_bcm2708             4834  0 
+但是依然没法使用？
+
+			3. 安装 i2c-tools,可以使用i2cdetect命令了，但是依然提示找不到i2c设备
+
+			4.进入到这个文件夹下面 加两句 
+			vi /etc/modules
+			添加
+			i2c-bcm2708
+			i2c-dev
+			reboot以后就启动了 i2c内核驱动了！
+
+5. bmp180
+依然是用的i2c模块，只是数据读取格式不同
+
+6.串口
+raspi-config
+配置里面找到串口打开
+apt-get install minicom
+minicom -D /dev/ttyS0
+安装minicom,并打开
+-b 设置波特率 -D 设置端口
+树莓派3b要选择 ttyS0 而不是 ttyAMA0
+
+7.ds18b20
+网上大概了解了一下设备树的概念，但是感觉还是比较模糊。就像一种可配置的编程方式？
+就先依样画葫芦吧 在/boot/config.txt 里面加上
+dtoverlay=w1-gpio-pullup，gpioin=4
+sudo modprobe w1_gpio
+sudo modprobe w1_therm
+执行这两句，但是这样每次使用都要加载 ，我就把这两句放到 /etc/rc.local里面
+模块加载了 依然没有？
+原来是config.txt里面写的pull,少了一个up，细心啊！
+现在知道 设备树是一个好东西！！硬件外设细微的改动就不需要重新修改内核源文件然后再编译运行了，修改一下设备树的配置就行了！！！这有点像USB协议里面报告描述符，按照事先设定好的协议方法写一堆描述符，发送给主机之后，主机去按照协议解析这堆描述符，所以可以在规则范围内随意DIY USB的各种功能。
+注意：DS18B20官方提供的程序有问题 ，注意在strcat(path, rom);前面少了"\"，不是一个完整的路径。所以后面就会open error。
+
+
+

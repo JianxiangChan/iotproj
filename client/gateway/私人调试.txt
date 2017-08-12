@@ -1,0 +1,45 @@
+localhost
+
+b827ebFFFE4e5b91
+
+b827eb4e5b91abab
+
+systemctl lrgateway.service stop
+
+systemctl lorabridge.service
+
+systemctl stop lorabridge
+
+sudo systemctl stop lorabridge
+sudo systemctl start lorabridge
+sudo systemctl status lorabridge
+
+
+sudo systemctl stop lrgateway
+sudo systemctl start lrgateway
+sudo systemctl status lrgateway
+
+
+AT+EDAMODE=?
+AT+EDAMODE=ABP
+AT+EDAMODE=OTAA
+
+
+AT+APPEUI=?
+AT+APPEUI=99999f9800000000
+
+AT+DEVEUI=?
+AT+DEVEUI=99999f989999999a
+AT+APPKEY=?
+AT+APPKEY=c639ed46b82dc41154bb9e8b0f2d5f75
+
+
+AT+DEVADDR=?
+AT+DEVADDR=11111111
+
+N17=A,AT+SEDN=0,"HEX",65,"789654"
+N18=A,AT+SEDN=0,"ASC",47,"abcdef"
+
+
+
+99999a9b00000000

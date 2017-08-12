@@ -1,0 +1,40 @@
+wget http://emqtt.com/downloads/2112/centos7
+
+mv centos7 emqttd-centos7-v2.1.2.zip
+
+7za x emqttd-centos7-v2.1.2.zip 
+
+cd emqttd/etc
+
+vi emq.conf 
+
+mqtt.listener.tcp = 121.42.35.23:1883
+mqtt.listener.ssl = 121.42.35.23:8883
+mqtt.listener.http = 121.42.35.23:8083
+mqtt.listener.https = 121.42.35.23:8084
+
+
+./bin/emqttd start
+./bin/emqttd_ctl status
+./bin/emqttd_ctl plugins load emq_auth_username
+./bin/emqttd_ctl users list
+
+添加三个用户：
+./bin/emqttd_ctl users add monitor monitor
+./bin/emqttd_ctl users add server server
+./bin/emqttd_ctl users add web web
+
+访问EMQTT管理后台
+http://121.42.35.23:18083/
+
+TCP连接地址：
+tcp://121.42.35.23:1883
+
+websocket连接地址：
+121.42.35.23:8083
+
+
+测试工具 watch 用户监控topic数据
+
+
+

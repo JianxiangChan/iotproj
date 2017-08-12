@@ -1,0 +1,197 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Pi温度监控和LED远程控制</title>
+    <script src="http://panyingyun.qiniudn.com/mqttws31.js" type="text/javascript"></script>
+    <script src="http://webdemo.lowaniot.com/mqutility.js" type="text/javascript"></script>
+	 <!-- CORE CSS-->
+  
+  <link href="http://webcms.lowaniot.com/cms/css/materialize.css" type="text/css" rel="stylesheet" media="screen,projection">
+  <link href="http://webcms.lowaniot.com/cms/css/style.css" type="text/css" rel="stylesheet" media="screen,projection">
+  <!-- Custome CSS-->    
+  <link href="http://webcms.lowaniot.com/cms/css/custom/custom.css" type="text/css" rel="stylesheet" media="screen,projection">
+  
+  
+
+
+  <!-- INCLUDED PLUGIN CSS ON THIS PAGE -->
+  <link href="http://webcms.lowaniot.com/cms/js/plugins/prism/prism.css" type="text/css" rel="stylesheet" media="screen,projection">
+  <link href="http://webcms.lowaniot.com/cms/js/plugins/perfect-scrollbar/perfect-scrollbar.css" type="text/css" rel="stylesheet" media="screen,projection">
+<!--  <link href="js/plugins/data-tables/css/jquery.dataTables.min.css" type="text/css" rel="stylesheet" media="screen,projection">-->
+<!-- <link href="js/plugins/jquery.nestable/nestable.css" type="text/css" rel="stylesheet" media="screen,projection">   -->
+ <style>
+        table {
+            font-size: 25px;
+        }
+    </style>
+    <script language="javascript" src="http://webcms.lowaniot.com/js/jquery.min.js"></script>
+    <script language="javascript">
+        var i = 0;
+        window.onload = function () {
+            check();
+            //console.log("----------------->c");
+			setMqttEntity({{.mqtt}});
+            connectionToggle();
+            // setInterval("check()","10000");
+        }
+        function check() {
+            $.ajax({
+                url: "/queryrtdata",
+                type: 'post',
+                dataType: 'json',
+                contentType: 'application/json;charset=utf-8',
+                cache: false,
+                async: false,
+                success: function (data) {
+                    $("#medium").empty();
+                    if (data != null) {
+                        i = 0
+                        //循环遍历json数组格式的数据
+                        var str = "";
+						console.log(data.length);
+						console.log(data);
+                        $.each(data, function (index, item) {
+                            if (i < data.length) {
+                                str += "<tr><td  align='center' id='mac" + i + "'>" + item.mac + "</td>";
+                                str += "<td  align='center' id='temperature" + i + "'>" + item.temperature + " ℃</td>";
+								
+								if (item.led == true) {
+                                    str += "</td><td  align='center' style='color:green;font-weight:bold' id='led" + i + "'>亮</td>";
+                                } else {
+                                    str += "</td><td  align='center' style='color:red;font-weight:bold' id='led" + i + "'>灭</td>";
+                                } 
+								
+								str +=  "<td  align='center' id='time" + i + "'>"
+                                  var timestr = new Date(item.create_date).Format("yyyy/MM/dd hh:mm:ss");
+                                str += timestr;
+								
+								str += "</td><td  align='center' style='color:green' id='open" + i + "'>打开</td>";
+								str += "</td><td  align='center' style='color:green' id='close" + i + "'>关闭</td>";
+								
+                                str += "</td><td align='center'><a href='dtdata?mac=" + item.mac + "'>详情</a></td></tr>"
+                                i++;
+                            }
+                        });
+                        //alert(str);
+                        $("#medium").html(str);
+                    }
+                    else {
+                        alert("error");
+                    }
+                },
+            });
+        }
+        //mqtt 刷新页面的方法
+        Date.prototype.Format = function (fmt) { //author: meizz 
+            var o = {
+                "M+": this.getMonth() + 1, //月份
+                "d+": this.getDate(), //日
+                "h+": this.getHours(), //小时
+                "m+": this.getMinutes(), //分
+                "s+": this.getSeconds(), //秒
+                "S": this.getMilliseconds() //毫秒
+            };
+            if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+                  for (var k in o)
+                if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+            return fmt;
+        }
+
+        function rtupdate(local) {
+		for (var j = 0; j < i; j++) {
+                if (local.mac == document.getElementById("mac" + j).innerHTML) {
+					
+					document.getElementById("temperature" + j).innerHTML = local.temperature + ' ℃';
+					
+                    if (local.led == true) {
+                        document.getElementById("led" + j).innerHTML = "亮";
+                        document.getElementById("led" + j).style.color = "green";
+                    }
+                    else {
+                        document.getElementById("led" + j).innerHTML = "灭";
+                        document.getElementById("led" + j).style.color = "red";
+                    }
+                   
+                    
+                    var time2 = new Date().Format("yyyy/MM/dd hh:mm:ss");
+                    document.getElementById("time" + j).innerHTML = time2;
+                    break;
+                }
+            }
+        }
+
+/*返回上次浏览位置*/
+$(function () {
+var str = window.location.href;
+str = str.substring(str.lastIndexOf("/") + 1);
+if ($.cookie(str)) {
+
+$("html,body").animate({ scrollTop: $.cookie(str) }, 1000);
+}
+else {
+}
+})
+
+$(window).scroll(function () { 
+var str = window.location.href;
+str = str.substring(str.lastIndexOf("/") + 1);
+var top = $(document).scrollTop();
+$.cookie(str, top, { path: '/' });
+return $.cookie(str);
+})
+/*返回上次浏览位置*/
+    </script>
+</head>
+<body>
+
+
+  <!-- Start Page Loading -->
+  <div id="loader-wrapper">
+      <div id="loader"></div>        
+      <div class="loader-section section-left"></div>
+      <div class="loader-section section-right"></div>
+  </div>
+  <!-- End Page Loading -->
+<table width="100%" align="center">
+    <tr>
+        <td align="center"><h1 style="font-size:50px;color:black" align="center" width="200px">Pi温度监控和LED远程控制</h1></td>
+    </tr>
+
+</table>
+
+
+<div>
+    <table class="striped demo1">
+        <thead>
+        <tr>
+            <th>设备MAC</th>
+            <th>温度</th>
+            <th>LED</th>   
+            <th>时间</th>
+            <th>点击打开LED</th>
+            <th>点击关闭LED</th>
+            <th>更多</th>
+        </tr>
+        </thead>
+        <tbody id="medium">
+        </tbody>
+    </table>
+</div>
+  <!-- jQuery Library -->
+    <script type="text/javascript" src="http://webcms.lowaniot.com/cms/js/plugins/jquery-1.11.2.min.js"></script>    
+    <!--materialize js-->
+    <script type="text/javascript" src="http://webcms.lowaniot.com/cms/js/materialize.js"></script>
+    <!--prism-->
+    <script type="text/javascript" src="http://webcms.lowaniot.com/cms/js/plugins/prism/prism.js"></script>
+    <!--scrollbar-->
+    <script type="text/javascript" src="http://webcms.lowaniot.com/cms/js/plugins/perfect-scrollbar/perfect-scrollbar.min.js"></script>
+    <!-- data-tables -->
+    <script type="text/javascript" src="http://webcms.lowaniot.com/cms/js/plugins/data-tables/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="http://webcms.lowaniot.com/cms/js/plugins/data-tables/data-tables-script.js"></script>
+    <!--plugins.js - Some Specific JS codes for Plugin Settings-->
+    <script type="text/javascript" src="http://webcms.lowaniot.com/cms/js/plugins.js"></script>
+    <!--custom-script.js - Add your own theme custom JS-->
+    <script type="text/javascript" src="http://webcms.lowaniot.com/cms/js/custom-script.js"></script>
+    <script type="text/javascript" src="/js/jquery.cookie.js"></script> 
+</body>
+</html>

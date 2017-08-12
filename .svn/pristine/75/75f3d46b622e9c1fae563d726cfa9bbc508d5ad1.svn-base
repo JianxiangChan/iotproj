@@ -1,0 +1,25 @@
+2.led
+没啥新的东西 就是GPIO操作
+3.key
+可以设置中断方式的来实现GPIO操作 
+wiringPiISR(gpio_num, rise/fall_edge, isr_server_addr)
+4. gpio load i2c时候出现问题
+gpio: Unable to load/unload modules as this Pi has the device tree enabled.
+You need to run the raspi-config program (as root) and select the
+modules (SPI or I2C) that you wish to load/unload there and reboot.
+There is more information here:
+https://www.raspberrypi.org/forums/viewtopic.php?f=28&t=97314
+解决步骤：  1. lsmod 查看i2c i2s spi都没有在里面，网上说在/edc/modprobe.d的黑名单里面取消注释，依次打开所有黑名单，发现没有对应的
+			2. 打开/boot/config.txt 里面的发现这三个模块都被注释掉了，于是取消注释， reboot重启 lsmod就发现内核已经装载着三个模块了。
+spi_bcm2835             6678  0 
+bcm2835_gpiomem         2976  0 
+i2c_bcm2708             4834  0 
+但是依然没法使用？
+3. 安装 i2c-tools,可以使用i2cdetect命令了，但是依然提示找不到i2c设备
+4.进入到这个文件夹下面 加两句 
+vi /etc/modules
+添加
+i2c-bcm2708
+i2c-dev
+reboot以后就启动了 i2c内核驱动了！
+

@@ -1,0 +1,136 @@
+raspbian pi文档 https://www.raspberrypi.org/documentation/configuration/raspi-config.md
+                 https://www.raspberrypi.org/documentation/linux/software/apt.md
+1. install go env on aliyun centos server 
+参考
+https://golang.org/dl/
+https://golang.org/doc/install/source#environment
+
+cd /home/
+wget https://storage.googleapis.com/golang/go1.8.3.linux-amd64.tar.gz
+tar zxvf go1.8.3.linux-amd64.tar.gz
+
+vim /etc/profile
+export GOROOT=/home/go
+export GOPATH=/home/gopro
+export PATH=$PATH:/$GOROOT/bin:/$GOPATH/bin
+
+source /etc/profile
+
+
+1.1 install go subversion on raspbian 
+
+/home/pi/go
+
+vim /etc/profile
+export GOROOT=/home/pi/go
+export GOPATH=/home/pi/gopro
+export PATH=$PATH:/$GOROOT/bin:/$GOPATH/bin
+
+source /etc/profile
+
+sudo apt-get install subversion
+
+
+
+2. 下载树莓派系统
+
+http://www.raspberrypi.org/downloads
+
+2017-04-10-raspbian-jessie-lite.zip
+解压得到 2017-04-10-raspbian-jessie-lite.img
+
+SDFormatter.exe 软件格式化 SD 卡。
+
+Win32DiskImager.exe  烧写系统 2017-04-10-raspbian-jessie-lite.img
+
+烧写完成后，需要在SDcard根目录下 创建ssh目录   否则无法启动ssh服务，无法通过ssh登录设备
+
+插上SD卡 插上网线  上电即可
+
+3.Fing Android IP软件查看局域网内IP 然后通过SSH协议登录
+  192.168.0.107
+  树莓派 raspbian 系统 pi 用户密码默认为 raspberry ；root 权限密码为 raspberry
+
+  passwd 修改用户名和密码 loraserver
+
+参考：http://shaocheng.li/post/blog/2017-05-09#toc_6
+4.配置语言 时区
+	在 I1 Change Locale 中设置本地语言，取消 en_GB.UTF-8 UTF-8 ，选中 en_US.UTF-8 UTF-8 。
+	在 I2 Change Timezone 中设置时区为 Asia 下的 Shanghai 。
+	在 I3 Change Keyboard Layout 设置键盘布局，依次选择 Generic 104-key PC > Other > English (US) > English (US) > The default for the 			keyboard layout > No compose key 。
+		在 I4 Change Wi-fi Country 中设置CN China
+	完成配置后，选择 Finish ，根据提示重启系统，如果没有提示，可以执行 sudo reboot 重启系统。
+
+5.Install vim/rzsz
+pi@raspberrypi:~ $ sudo apt-get update
+pi@raspberrypi:~ $ sudo apt-get remove vim-common
+pi@raspberrypi:~ $ sudo apt-get install vim
+
+cat /proc/version
+Linux version 4.4.50-v7+ (dc4@dc4-XPS13-9333) (gcc version 4.9.3 (crosstool-NG crosstool-ng-1.22.0-88-g8460611) ) #970 SMP Mon Feb 20 19:18:29 GMT 2017
+
+lsb_release -a
+No LSB modules are available.
+Distributor ID: Raspbian
+Description:    Raspbian GNU/Linux 8.0 (jessie)
+Release:        8.0
+Codename:       jessie
+
+6.配置wifi
+
+	请参考：https://i.cmgine.net/archives/11053.html
+        sudo vim /etc/network/interfaces
+        修改iface wlan0 inet manual  为  iface wlan0 inet dhcp
+
+	sudo vim /etc/wpa_supplicant/wpa_supplicant.conf
+        修改
+	# 最常用的配置。WPA-PSK 加密方式。添加下面的行(原来的行务必不要删除)，该方式支持多个wifi
+
+network={
+ssid="michaelapp"
+psk="11111111"
+priority=4
+}
+
+network={
+ssid="2404"
+psk="googlepyy"
+priority=4
+}
+ 
+sudo ifup wlan0  即可
+
+7. install rzsz
+sudo apt-get  install lrzsz
+
+8. update and upgrade
+sudo apt-get update
+sudo apt-get upgrade
+
+9.温度传感器配置
+dtoverlay=w1-gpio,gpiopin=4
+
+可参考文献：
+File:   w1-gpio-overlay.dtb
+Info:   Configures the w1-gpio Onewire interface module.
+        Use this overlay if you *don't* need a pin to drive an external pullup.
+Load:   dtoverlay=w1-gpio,<param>=<val>
+Params: gpiopin                  GPIO pin for I/O (default "4")
+
+        pullup                   Non-zero, "on", or "y" to enable the parasitic
+                                 power (2-wire, power-on-data) feature
+
+
+File:   w1-gpio-pullup-overlay.dtb
+Info:   Configures the w1-gpio Onewire interface module.
+        Use this overlay if you *do* need a pin to drive an external pullup.
+Load:   dtoverlay=w1-gpio-pullup,<param>=<val>,...
+Params: gpiopin                  GPIO pin for I/O (default "4")
+
+        pullup                   Non-zero, "on", or "y" to enable the parasitic
+                                 power (2-wire, power-on-data) feature
+
+        extpullup                GPIO pin for external pullup (default "5")
+
+
+

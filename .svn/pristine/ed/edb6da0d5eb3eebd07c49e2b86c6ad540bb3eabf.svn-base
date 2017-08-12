@@ -1,0 +1,10 @@
+;[mqtt]
+server = tcp://121.42.35.23:1883
+username = server
+password = server
+
+;[log]
+log_to_file = false
+log_dir_win = D:\log
+log_dir_linux = .
+log_prefix = sug

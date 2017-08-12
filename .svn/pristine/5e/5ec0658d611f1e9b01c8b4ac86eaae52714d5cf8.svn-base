@@ -1,0 +1,105 @@
+pi
+lora
+
+raspberry
+
+root
+root
+
+michael/Cjj123shlpyy
+
+192.168.0.106
+b8:27:eb:d2:12:b7  有线的MAC
+B8-27-EB-87-47-E2  无线的MAC
+
+
+无线设置：
+
+http://shumeipai.nxez.com/2016/09/17/raspberry-pi-set-up-a-wireless-internet-access.html
+
+hostnamectl 
+
+
+================》
+gpio控制：
+http://shumeipai.nxez.com/2015/03/17/saks-diy-tutorials-gpio-development-environment.html
+
+http://wiringpi.com/
+
+http://shumeipai.nxez.com/2013/10/20/raspberry-pi-gpio-function-learning.html#more-478
+
+
+http://wiringpi.com/download-and-install/
+
+https://github.com/WiringPi
+http://wiringpi.com/examples/blink/
+
+https://my.oschina.net/u/2435819/blog/591500
+
+================》
+omxplayer
+
+1、OMXplayer支持硬解码，因此是一个非常不错的选择。
+2、支持格式目前知道的有：MKV、AVI、FLV、MP4
+3、如果想用全屏播放，参数是：-r
+4、如果想用HDMI输出声音，参数是：-o hdmi，并且有个前提：/boot/config.txt 里面设置HDMI_DRIVER=2
+http://blog.csdn.net/charein/article/details/20394973
+http://hi.ktsee.com/372.html
+
+=============》
+在树莓派上创建内存盘，将频繁读写的缓存等小文件放到内存，减少对SD卡的寿命消耗。
+
+http://shumeipai.nxez.com/2013/10/04/raspberry-pi-come-in-to-create-a-memory-disk.html
+
+mkdir /ram
+mount -t tmpfs -o size=10m,mode=0777 tmpfs /ram
+以上命令是创建10兆内存盘。根据自己的需求进行调整。
+
+============================》
+
+ngrok 内网穿透工具：
+https://imququ.com/post/self-hosted-ngrokd.html#simple_thread
+
+===============================》
+
+看门狗
+
+http://shumeipai.nxez.com/2013/10/05/raspberry-pi-for-two-methods-of-installing-watchdog.html
+===============================》
+ftp
+http://shumeipai.nxez.com/2013/09/07/use-the-remote-sftp-file-transfer-raspberry-pi.html
+=================================>
+无线路由
+http://shumeipai.nxez.com/2013/09/11/raspberry-pi-configured-as-a-wireless-router.html
+
+=================================》
+显示温度
+http://shumeipai.nxez.com/2015/10/11/saks-diy-tutorials-temperature-display-ds18b20.html
+
+=========================================》
+socat  tcp/udp转发神器
+https://blog.lilydjwg.me/tag/socat
+http://www.cyberciti.biz/faq/linux-unix-tcp-port-forwarding/
+==========================================》
+gpio 编号
+http://shumeipai.nxez.com/2014/10/18/raspberry-pi-gpio-port-naming.html#more-1225
+https://github.com/hugozhu/rpi
+http://www.airspayce.com/mikem/bcm2835/
+====================
+文字转语音
+http://shumeipai.nxez.com/2013/10/05/three-methods-developed-in-text-to-voice-services.html
+
+=======================》
+camkit 摄像头插件：
+https://github.com/letsiot/Camkit
+
+================================》
+docker
+https://imququ.com/post/use-docker.html
+
+===============================》
+nginx
+https://imququ.com/post/my-nginx-conf.html
+===============================》
+证书：
+https://imququ.com/post/letsencrypt-certificate.html
